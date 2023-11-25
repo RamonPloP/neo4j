@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./styles/style.css">
+  <title>Selección de Opción</title>
+</head>
+<body>
+
+<header>
+  <h1>Selecciona una Opción</h1>
+</header>
+
+<div class="options-container">
+  <a href="dept.html" class="option" id="deptLink">DEPT</a>
+  <a href="emp.html" class="option" id="empLink">EMP</a>
+</div>
+
+<script>
+  // Obtén el nombre del archivo actual
+  var currentFile = location.pathname.split("/").slice(-1)[0];
+
+  // Establece la clase 'selected' en el enlace correspondiente al archivo actual
+  if (currentFile === 'dept.html') {
+    document.getElementById('deptLink').classList.add('selected');
+  } else if (currentFile === 'emp.html') {
+    document.getElementById('empLink').classList.add('selected');
+  }
+</script>
+
+</body>
+</html>
