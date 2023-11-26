@@ -1,0 +1,13 @@
+{% extends './layout.html' %}
+
+{% block content %}
+<nav class="navbar">
+    <a href="{{url_for('addEmp')}}" class="nav-item">Agregar</a>
+    <a href="{{url_for('listEmp')}}" class="nav-item">Listar</a>
+    <a href="{{url_for('editEmp')}}" class="nav-item">Editar</a>
+    <a href="{{url_for('delEmp')}}" class="nav-item">Eliminar</a>
+</nav>
+{% block element %}
+{% endblock %}
+
+{% endblock %}
