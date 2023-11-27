@@ -1,1 +1,14 @@
 {% extends 'dept.html' %}
+
+{% block element %}
+    <form method="POST">
+        <label for="deptno">Seleccionar Departamento a Eliminar:</label>
+        <select name="deptno" required>
+            {% for department in data.departments %}
+                <option value="{{ department.deptno }}">{{ department.deptno }} - {{ department.dname }} - {{ department.loc }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Eliminar Departamento</button>
+    </form>
+{% endblock %}

@@ -1,1 +1,20 @@
 {% extends 'dept.html' %}
+
+{% block element %}
+<form method="POST">
+    <label for="deptno">Seleccionar Departamento a Editar:</label>
+    <select name="deptno" required>
+        {% for department in data.departments %}
+            <option value="{{ department.deptno }}">{{ department.deptno }} - {{ department.dname }} - {{ department.loc }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="new_dname">Nuevo Nombre del Departamento:</label>
+    <input type="text" name="new_dname" required>
+
+    <label for="new_loc">Nueva Ubicación del Departamento:</label>
+    <input type="text" name="new_loc" required>
+
+    <button type="submit">Editar Departamento</button>
+</form>
+{% endblock %}

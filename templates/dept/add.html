@@ -1,1 +1,17 @@
 {% extends 'dept.html' %}
+
+{% block element %}
+<form method="POST">
+    <label for="deptno">Número de Departamento:</label>
+    <input type="number" name="deptno" required>
+
+    <label for="dname">Nombre del Departamento:</label>
+    <input type="text" name="dname" required>
+
+    <label for="loc">Ubicación del Departamento:</label>
+    <input type="text" name="loc" required>
+
+    <button type="submit">Agregar Departamento</button>
+</form>
+
+{% endblock %}

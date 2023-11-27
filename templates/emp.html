@@ -7,7 +7,10 @@
     <a href="{{url_for('editEmp')}}" class="nav-item">Editar</a>
     <a href="{{url_for('delEmp')}}" class="nav-item">Eliminar</a>
 </nav>
-{% block element %}
-{% endblock %}
+
+<div class="form">
+    {% block element %}
+    {% endblock %}
+</div>
 
 {% endblock %}

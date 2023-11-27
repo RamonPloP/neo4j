@@ -1,1 +1,10 @@
 {% extends 'dept.html' %}
+
+{% block element %}
+    <ul>
+        {% for department in data.departments %}
+        <li>{{ department.deptno }} - {{ department.dname }} - {{ department.loc }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
