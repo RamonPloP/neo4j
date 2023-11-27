@@ -1,1 +1,31 @@
 {% extends 'emp.html' %}
+
+{% block element %}
+<form method="POST">
+    <label for="empno">Número de Empleado:</label>
+    <input type="number" name="empno" required>
+
+    <label for="ename">Nombre del Empleado:</label>
+    <input type="text" name="ename" required>
+
+    <label for="job">Puesto del Empleado:</label>
+    <input type="text" name="job" required>
+
+    <label for="mgr">Número de Manager:</label>
+    <input type="number" name="mgr">
+
+    <label for="hiredate">Fecha de Contratación:</label>
+    <input type="date" name="hiredate">
+
+    <label for="sal">Salario:</label>
+    <input type="number" name="sal">
+
+    <label for="comm">Comisión:</label>
+    <input type="number" name="comm">
+
+    <label for="deptno">Número de Departamento:</label>
+    <input type="number" name="deptno">
+
+    <button type="submit">Agregar Empleado</button>
+</form>
+{% endblock %}

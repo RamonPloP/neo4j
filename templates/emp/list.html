@@ -1,1 +1,9 @@
 {% extends 'emp.html' %}
+
+{% block element %}
+    <ul>
+        {% for employee in data.employees %}
+        <li>{{ employee.empno }} - {{ employee.ename }} - {{ employee.job }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

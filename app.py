@@ -1,5 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from neo4j import GraphDatabase
+from neo4j.exceptions import ServiceUnavailable
+from datetime import datetime
 
 uri = "bolt://localhost:7687"
 user = "neo4j"
@@ -14,7 +16,7 @@ def index():
     data = {
         "title": "NEO4J"
     }
-    return render_template('layout.html', data=data);
+    return render_template('layout.html', data=data)
 
 @app.route('/emp')
 def emp():
@@ -23,32 +25,118 @@ def emp():
     }
     return render_template('emp.html', data=data)
 
-@app.route('/emp/add')
+@app.route('/emp/add', methods=['GET', 'POST'])
 def addEmp():
     data = {
         "title": "Agregar Emp"
     }
+    if request.method == 'POST':
+        empno = int(request.form['empno'])
+        ename = request.form['ename']
+        job = request.form['job']
+        mgr = int(request.form.get('mgr', -1))
+        
+        hiredate_str = request.form.get('hiredate', '')
+        hiredate = datetime.strptime(hiredate_str, '%Y-%m-%d') if hiredate_str else None
+        
+        sal = float(request.form.get('sal', 0.0))
+        comm = float(request.form.get('comm', 0.0))
+        deptno = int(request.form.get('deptno', -1))
+
+        with driver.session() as session:
+            try:
+                # Checamos que el departamento exista 
+                result = session.run("MATCH (d:DEPT {deptno: $deptno}) RETURN d", deptno=deptno).single()
+
+                if result:
+                    # Si el departamento existe, entonces creamos la relación con el nodo del empleado agregado
+                    result = session.run(
+                        "MATCH (d:DEPT {deptno: $deptno}) "
+                        "CREATE (e:EMP {empno: $empno, ename: $ename, job: $job, mgr: $mgr, hiredate: $hiredate, sal: $sal, comm: $comm})-[:TRABAJA_EN]->(d)",
+                        empno=empno, ename=ename, job=job, mgr=mgr, hiredate=hiredate, sal=sal, comm=comm, deptno=deptno
+                    )
+
+                    return redirect(url_for('addEmp'))
+                else:
+                    return #render_template('error.html', error="No se encontró el departamento con el deptno proporcionado.")
+
+            except ServiceUnavailable as e:
+                return #render_template('error.html', error=f"Error de conexión con la base de datos Neo4j: {e}")
+
     return render_template('./emp/add.html', data=data)
+
 
 @app.route('/emp/list')
 def listEmp():
+    with driver.session() as session:
+        result = session.run("MATCH (e:EMP) RETURN e.empno as empno, e.ename as ename, e.job as job")
+        employees = [record for record in result]
+
     data = {
-        "title": "Listar Emp"
+        "title": "Listar Emp",
+        "employees": employees
     }
     return render_template('./emp/list.html', data=data)
 
-@app.route('/emp/edit')
+@app.route('/emp/edit', methods=['GET', 'POST'])
 def editEmp():
     data = {
         "title": "Editar Emp"
     }
+
+    with driver.session() as session:
+        result = session.run("MATCH (e:EMP) RETURN e.empno as empno, e.ename as ename, e.job as job, e.mgr as mgr, e.hiredate as hiredate, e.sal as sal, e.comm as comm, e.deptno as deptno")
+        employees = [record for record in result]
+
+    data["employees"] = employees
+
+    if request.method == 'POST':
+        empno_to_edit = int(request.form['empno'])
+        new_ename = request.form['new_ename']
+        new_job = request.form['new_job']
+        new_mgr = int(request.form.get('new_mgr', -1))
+        new_hiredate = request.form.get('new_hiredate', '')
+        new_sal = float(request.form.get('new_sal', 0.0))
+        new_comm = float(request.form.get('new_comm', 0.0))
+        new_deptno = int(request.form.get('new_deptno', -1))
+
+        with driver.session() as session:
+            # Eliminar la relación existente con el departamento anterior
+            session.run("MATCH (e:EMP {empno: $empno})-[r:WORKS_IN]->() DELETE r", empno=empno_to_edit)
+
+            # Establecer la nueva relación con el departamento correspondiente
+            session.run(
+                "MATCH (e:EMP {empno: $empno}), (d:DEPT {deptno: $new_deptno}) "
+                "CREATE (e)-[:TRABAJA_EN]->(d) "
+                "SET e.ename = $new_ename, e.job = $new_job, e.mgr = $new_mgr, e.hiredate = $new_hiredate, e.sal = $new_sal, e.comm = $new_comm, e.deptno = $new_deptno",
+                empno=empno_to_edit, new_ename=new_ename, new_job=new_job, new_mgr=new_mgr, new_hiredate=new_hiredate, new_sal=new_sal, new_comm=new_comm, new_deptno=new_deptno
+            )
+
+        return redirect(url_for('editEmp'))
+
     return render_template('./emp/edit.html', data=data)
 
-@app.route('/emp/del')
+@app.route('/emp/del', methods=['GET','POST'])
 def delEmp():
     data = {
         "title": "Eliminar Emp"
     }
+
+    with driver.session() as session:
+        result = session.run("MATCH (e:EMP) RETURN e.empno as empno, e.ename as ename, e.job as job")
+        employees = [record for record in result]
+
+    data["employees"] = employees
+
+    if request.method == 'POST':
+        empno_to_delete = int(request.form['empno'])
+
+        with driver.session() as session:
+            # Eliminar el empleado y sus relaciones
+            session.run("MATCH (e:EMP {empno: $empno}) DETACH DELETE e", empno=empno_to_delete)
+
+        return redirect(url_for('delEmp'))
+    
     return render_template('./emp/del.html', data=data)
 
 #======================================================================================

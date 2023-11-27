@@ -1,1 +1,14 @@
 {% extends 'emp.html' %}
+
+{% block element %}
+    <form method="POST">
+        <label for="empno">Seleccionar Empleado a Eliminar:</label>
+        <select name="empno" required>
+            {% for employee in data.employees %}
+                <option value="{{ employee.empno }}">{{ employee.empno }} - {{ employee.ename }} - {{ employee.job }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">Eliminar Empleado</button>
+    </form>
+{% endblock %}
