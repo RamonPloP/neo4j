@@ -27,9 +27,20 @@ def emp():
 
 @app.route('/emp/add', methods=['GET', 'POST'])
 def addEmp():
+    with driver.session() as session:
+        result = session.run("MATCH (d:DEPT) RETURN d.deptno as deptno, d.dname as dname, d.loc as loc")
+        departments = [record for record in result]
+
+    with driver.session() as session:
+        result = session.run("MATCH (e:EMP) RETURN e.empno as empno, e.ename as ename, e.job as job")
+        employees = [record for record in result]
+
     data = {
-        "title": "Agregar Emp"
+        "title": "Agregar Emp",
+        "departments": departments,
+        "employees": employees
     }
+
     if request.method == 'POST':
         empno = int(request.form['empno'])
         ename = request.form['ename']
@@ -44,25 +55,30 @@ def addEmp():
         deptno = int(request.form.get('deptno', -1))
 
         with driver.session() as session:
-            try:
-                # Checamos que el departamento exista 
-                result = session.run("MATCH (d:DEPT {deptno: $deptno}) RETURN d", deptno=deptno).single()
+            # Crear el nodo del nuevo empleado
+            session.run(
+                "CREATE (e:EMP {empno: $empno, ename: $ename, job: $job, hiredate: $hiredate, sal: $sal, comm: $comm})",
+                empno=empno, ename=ename, job=job, hiredate=hiredate, sal=sal, comm=comm
+            )
 
-                if result:
-                    # Si el departamento existe, entonces creamos la relación con el nodo del empleado agregado
-                    result = session.run(
-                        "MATCH (d:DEPT {deptno: $deptno}) "
-                        "CREATE (e:EMP {empno: $empno, ename: $ename, job: $job, mgr: $mgr, hiredate: $hiredate, sal: $sal, comm: $comm})-[:TRABAJA_EN]->(d)",
-                        empno=empno, ename=ename, job=job, mgr=mgr, hiredate=hiredate, sal=sal, comm=comm, deptno=deptno
-                    )
+            # Si se proporciona un departamento, establecer la relación TRABAJA_EN
+            if deptno != -1:
+                session.run(
+                    "MATCH (e:EMP {empno: $empno}), (d:DEPT {deptno: $deptno}) "
+                    "CREATE (e)-[:TRABAJA_EN]->(d)",
+                    empno=empno, deptno=deptno
+                )
 
-                    return redirect(url_for('addEmp'))
-                else:
-                    return #render_template('error.html', error="No se encontró el departamento con el deptno proporcionado.")
+            # Si se proporciona un gerente, establecer la relación ES_GERENTE_DE
+            if mgr != -1:
+                session.run(
+                    "MATCH (e:EMP {empno: $empno}), (m:EMP {empno: $mgr}) "
+                    "CREATE (m)-[:ES_GERENTE_DE]->(e)",
+                    empno=empno, mgr=mgr
+                )
 
-            except ServiceUnavailable as e:
-                return #render_template('error.html', error=f"Error de conexión con la base de datos Neo4j: {e}")
-
+        return redirect(url_for('addEmp'))
+    
     return render_template('./emp/add.html', data=data)
 
 
@@ -80,8 +96,18 @@ def listEmp():
 
 @app.route('/emp/edit', methods=['GET', 'POST'])
 def editEmp():
+    with driver.session() as session:
+        result = session.run("MATCH (d:DEPT) RETURN d.deptno as deptno, d.dname as dname, d.loc as loc")
+        departments = [record for record in result]
+
+    with driver.session() as session:
+        result = session.run("MATCH (e:EMP) RETURN e.empno as empno, e.ename as ename, e.job as job")
+        employees = [record for record in result]
+
     data = {
-        "title": "Editar Emp"
+        "title": "Editar Emp",
+        "departments": departments,
+        "employees": employees
     }
 
     with driver.session() as session:
@@ -101,14 +127,17 @@ def editEmp():
         new_deptno = int(request.form.get('new_deptno', -1))
 
         with driver.session() as session:
-            # Eliminar la relación existente con el departamento anterior
-            session.run("MATCH (e:EMP {empno: $empno})-[r:WORKS_IN]->() DELETE r", empno=empno_to_edit)
-
-            # Establecer la nueva relación con el departamento correspondiente
+            # Eliminar la relación existente con el departamento anterior y el gerente anterior
             session.run(
-                "MATCH (e:EMP {empno: $empno}), (d:DEPT {deptno: $new_deptno}) "
-                "CREATE (e)-[:TRABAJA_EN]->(d) "
-                "SET e.ename = $new_ename, e.job = $new_job, e.mgr = $new_mgr, e.hiredate = $new_hiredate, e.sal = $new_sal, e.comm = $new_comm, e.deptno = $new_deptno",
+                "MATCH (e:EMP {empno: $empno})-[r:TRABAJA_EN|ES_GERENTE_DE]->() DELETE r",
+                empno=empno_to_edit
+            )
+
+            # Establecer la nueva relación con el departamento correspondiente y el nuevo gerente
+            session.run(
+                "MATCH (e:EMP {empno: $empno}), (d:DEPT {deptno: $new_deptno}), (mgr:EMP {empno: $new_mgr}) "
+                "CREATE (e)-[:TRABAJA_EN]->(d), (mgr)-[:ES_GERENTE_DE]->(e) "
+                "SET e.ename = $new_ename, e.job = $new_job, e.hiredate = $new_hiredate, e.sal = $new_sal, e.comm = $new_comm, e.deptno = $new_deptno",
                 empno=empno_to_edit, new_ename=new_ename, new_job=new_job, new_mgr=new_mgr, new_hiredate=new_hiredate, new_sal=new_sal, new_comm=new_comm, new_deptno=new_deptno
             )
 

@@ -12,7 +12,12 @@
     <input type="text" name="job" required>
 
     <label for="mgr">Número de Manager:</label>
-    <input type="number" name="mgr">
+    <select name="mgr" required>
+        {% for i in data.employees %}
+            <option value="{{ i.empno }}" name="mgr">{{ i.empno }} - {{ i.ename }}</option>
+        {% endfor %}
+        <option value="0">NO TIENE</option>
+    </select>
 
     <label for="hiredate">Fecha de Contratación:</label>
     <input type="date" name="hiredate">
@@ -24,7 +29,12 @@
     <input type="number" name="comm">
 
     <label for="deptno">Número de Departamento:</label>
-    <input type="number" name="deptno">
+    <select name="deptno" required>
+        {% for department in data.departments %}
+            <option value="{{ department.deptno }}" name="deptno">{{ department.deptno }} - {{ department.dname }} - {{ department.loc }}</option>
+        {% endfor %}
+    </select>
+    <div></div>
 
     <button type="submit">Agregar Empleado</button>
 </form>

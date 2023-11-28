@@ -1,35 +1,47 @@
 {% extends 'emp.html' %}
 
 {% block element %}
-    <form method="POST">
-        <label for="empno">Seleccionar Empleado a Editar:</label>
-        <select name="empno" required>
-            {% for employee in data.employees %}
-                <option value="{{ employee.empno }}">{{ employee.empno }} - {{ employee.ename }} - {{ employee.job }}</option>
-            {% endfor %}
-        </select>
+<form method="POST">
+    <label for="empno">Seleccionar Empleado a Editar:</label>
+    <select name="empno" required>
+        {% for employee in data.employees %}
+            <option value="{{ employee.empno }}">{{ employee.empno }} - {{ employee.ename }} - {{ employee.job }}</option>
+        {% endfor %}
+    </select>
 
-        <label for="new_ename">Nuevo Nombre del Empleado:</label>
-        <input type="text" name="new_ename" required>
+    <label for="new_ename">Nuevo Nombre del Empleado:</label>
+    <input type="text" name="new_ename" required>
 
-        <label for="new_job">Nuevo Puesto del Empleado:</label>
-        <input type="text" name="new_job" required>
+    <label for="new_job">Nuevo Puesto del Empleado:</label>
+    <input type="text" name="new_job" required>
 
-        <label for="new_mgr">Nuevo Número de Manager:</label>
-        <input type="number" name="new_mgr">
+    <label for="new_mgr">Nuevo Número de Manager:</label>
+    <select name="new_mgr" required>
+        {% for i in data.employees %}
+            <option value="{{ i.empno }}">{{ i.empno }} - {{ i.ename }}</option>
+        {% endfor %}
+        <option value="0">NO TIENE</option>
+    </select>
 
-        <label for="new_hiredate">Nueva Fecha de Contratación:</label>
-        <input type="date" name="new_hiredate">
+    <label for="new_hiredate">Nueva Fecha de Contratación:</label>
+    <input type="date" name="new_hiredate">
 
-        <label for="new_sal">Nuevo Salario:</label>
-        <input type="number" name="new_sal">
+    <label for="new_sal">Nuevo Salario:</label>
+    <input type="number" name="new_sal">
 
-        <label for="new_comm">Nueva Comisión:</label>
-        <input type="number" name="new_comm">
+    <label for="new_comm">Nueva Comisión:</label>
+    <input type="number" name="new_comm">
 
-        <label for="new_deptno">Nuevo Número de Departamento:</label>
-        <input type="number" name="new_deptno">
+    <label for="new_deptno">Nuevo Número de Departamento:</label>
+    <select name="new_deptno" required>
+        {% for department in data.departments %}
+            <option value="{{ department.deptno }}">{{ department.deptno }} - {{ department.dname }} - {{ department.loc }}</option>
+        {% endfor %}
+    </select>
 
-        <button type="submit">Editar Empleado</button>
-    </form>
+    <div></div>
+
+    <button type="submit">Editar Empleado</button>
+</form>
+
 {% endblock %}
