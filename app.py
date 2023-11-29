@@ -121,46 +121,47 @@ def editEmp():
         "title": "Editar Emp",
         "departments": departments,
         "employees": employees
-    }   
+    }
 
     with driver.session() as session:
         result = session.run("MATCH (e:EMP) RETURN e.empno as empno, e.ename as ename, e.job as job, e.mgr as mgr, e.hiredate as hiredate, e.sal as sal, e.comm as comm, e.deptno as deptno")
         employees = [record for record in result]
+        data["employees"] = employees
 
-    data["employees"] = employees
+        if request.method == 'POST':
+            empno_to_edit = int(request.form['empno'])
+            new_ename = request.form['new_ename']
+            new_job = request.form['new_job']
+            new_mgr = int(request.form.get('new_mgr', -1))
+            new_hiredate_str = request.form.get('new_hiredate', '')
+            new_hiredate = datetime.strptime(new_hiredate_str, '%Y-%m-%d') if new_hiredate_str else None
+            new_sal = float(request.form.get('new_sal', 0.0))
+            new_comm = float(request.form.get('new_comm', 0.0))
+            new_deptno = int(request.form.get('new_deptno', -1))
 
-    if request.method == 'POST':
-        empno_to_edit = int(request.form['empno'])
-        new_ename = request.form['new_ename']
-        new_job = request.form['new_job']
-        new_mgr = int(request.form.get('new_mgr', -1))
-        new_hiredate = request.form.get('new_hiredate', '')
-        new_sal = float(request.form.get('new_sal', 0.0))
-        new_comm = float(request.form.get('new_comm', 0.0))
-        new_deptno = int(request.form.get('new_deptno', -1))
-            
-        if new_mgr == empno_to_edit:
-            #Un empleado no puede ser su propio gerente
-            return redirect(url_for('editEmp'))      
+            with driver.session() as session:
+                # Eliminar relaciones existentes
+                session.run(
+                    "MATCH (e:EMP {empno: $empno})-[r:TRABAJA_EN]->() DELETE r",
+                    empno=empno_to_edit
+                )
+                session.run(
+                    "MATCH (e:EMP {empno: $empno})<-[r:ES_GERENTE_DE]-() DELETE r",
+                    empno=empno_to_edit
+                )
 
-        with driver.session() as session:
-            # Eliminar la relación existente con el departamento anterior y el gerente anterior
-            session.run(
-                "MATCH (e:EMP {empno: $empno})-[r:TRABAJA_EN|ES_GERENTE_DE]->() DELETE r",
-                empno=empno_to_edit
-            )
+                # Crear nuevas relaciones y actualizar propiedades del empleado
+                session.run(
+                    "MATCH (e:EMP {empno: $empno}), (d:DEPT {deptno: $new_deptno}), (mgr:EMP {empno: $new_mgr}) "
+                    "CREATE (e)-[:TRABAJA_EN]->(d), (mgr)-[:ES_GERENTE_DE]->(e) "
+                    "SET e.ename = $new_ename, e.job = $new_job, e.hiredate = $new_hiredate, e.sal = $new_sal, e.comm = $new_comm, e.deptno = $new_deptno",
+                    empno=empno_to_edit, new_ename=new_ename, new_job=new_job, new_mgr=new_mgr, new_hiredate=new_hiredate, new_sal=new_sal, new_comm=new_comm, new_deptno=new_deptno
+                )
 
-            # Establecer la nueva relación con el departamento correspondiente y el nuevo gerente
-            session.run(
-                "MATCH (e:EMP {empno: $empno}), (d:DEPT {deptno: $new_deptno}), (mgr:EMP {empno: $new_mgr}) "
-                "CREATE (e)-[:TRABAJA_EN]->(d), (mgr)-[:ES_GERENTE_DE]->(e) "
-                "SET e.ename = $new_ename, e.job = $new_job, e.hiredate = $new_hiredate, e.sal = $new_sal, e.comm = $new_comm, e.deptno = $new_deptno",
-                empno=empno_to_edit, new_ename=new_ename, new_job=new_job, new_mgr=new_mgr, new_hiredate=new_hiredate, new_sal=new_sal, new_comm=new_comm, new_deptno=new_deptno
-            )
-
-        return redirect(url_for('editEmp'))
+            return redirect(url_for('editEmp'))
 
     return render_template('./emp/edit.html', data=data)
+
 
 @app.route('/emp/del', methods=['GET','POST'])
 def delEmp():
