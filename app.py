@@ -140,20 +140,17 @@ def editEmp():
             new_deptno = int(request.form.get('new_deptno', -1))
 
             with driver.session() as session:
-                # Eliminar relaciones existentes
+                # Eliminar relaciones existentes solo con el antiguo gerente
                 session.run(
-                    "MATCH (e:EMP {empno: $empno})-[r:TRABAJA_EN]->() DELETE r",
-                    empno=empno_to_edit
-                )
-                session.run(
-                    "MATCH (e:EMP {empno: $empno})<-[r:ES_GERENTE_DE]-() DELETE r",
+                    "MATCH (e:EMP {empno: $empno})<-[r:ES_GERENTE_DE]-(oldMgr:EMP) "
+                    "DELETE r",
                     empno=empno_to_edit
                 )
 
                 # Crear nuevas relaciones y actualizar propiedades del empleado
                 session.run(
-                    "MATCH (e:EMP {empno: $empno}), (d:DEPT {deptno: $new_deptno}), (mgr:EMP {empno: $new_mgr}) "
-                    "CREATE (e)-[:TRABAJA_EN]->(d), (mgr)-[:ES_GERENTE_DE]->(e) "
+                    "MATCH (e:EMP {empno: $empno}), (d:DEPT {deptno: $new_deptno}), (newMgr:EMP {empno: $new_mgr}) "
+                    "CREATE (e)-[:TRABAJA_EN]->(d), (newMgr)-[:ES_GERENTE_DE]->(e) "
                     "SET e.ename = $new_ename, e.job = $new_job, e.hiredate = $new_hiredate, e.sal = $new_sal, e.comm = $new_comm, e.deptno = $new_deptno",
                     empno=empno_to_edit, new_ename=new_ename, new_job=new_job, new_mgr=new_mgr, new_hiredate=new_hiredate, new_sal=new_sal, new_comm=new_comm, new_deptno=new_deptno
                 )
