@@ -3,7 +3,7 @@
 {% block element %}
 <form method="POST">
     <label for="empno">Seleccionar Empleado a Editar:</label>
-    <select name="empno" required>
+    <select name="empno" id="id" required>
         {% for employee in data.employees %}
             <option value="{{ employee.empno }}">{{ employee.empno }} - {{ employee.ename }} - {{ employee.job }}</option>
         {% endfor %}
@@ -16,7 +16,7 @@
     <input type="text" name="new_job" required>
 
     <label for="new_mgr">Nuevo Número de Manager:</label>
-    <select name="new_mgr" required>
+    <select name="new_mgr" id="new_mgr" required>
         {% for i in data.employees %}
             <option value="{{ i.empno }}">{{ i.empno }} - {{ i.ename }}</option>
         {% endfor %}
@@ -24,7 +24,7 @@
     </select>
 
     <label for="new_hiredate">Nueva Fecha de Contratación:</label>
-    <input type="date" name="new_hiredate">
+    <input type="date" name="new_hiredate" required>
 
     <label for="new_sal">Nuevo Salario:</label>
     <input type="number" name="new_sal" required min="1">
@@ -43,5 +43,23 @@
 
     <button type="submit">Editar Empleado</button>
 </form>
+<script>
+    document.addEventListener('submit', (event) => {
+        console.log('Dentro');
+        const idSelect = document.getElementById('id');
+        const id = idSelect.options[idSelect.selectedIndex].value;
+        
+        const mgrSelect = document.getElementById('new_mgr');
+        const mgr = mgrSelect.options[mgrSelect.selectedIndex].value;
+        
+        console.log(id, mgr);
+
+        if (id == mgr) {
+            alert('No se puede asignar como manager a sí mismo');
+            event.preventDefault();
+        }
+    });
+</script>
+
 
 {% endblock %}
