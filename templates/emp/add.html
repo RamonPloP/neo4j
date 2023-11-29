@@ -3,7 +3,7 @@
 {% block element %}
 <form method="POST">
     <label for="empno">Número de Empleado:</label>
-    <input type="number" name="empno" required>
+    <input type="number" name="empno" required min="1">
 
     <label for="ename">Nombre del Empleado:</label>
     <input type="text" name="ename" required>
@@ -26,10 +26,10 @@
     <input type="number" name="sal">
 
     <label for="comm">Comisión:</label>
-    <input type="number" name="comm">
+    <input type="number" name="comm" required min="0">
 
     <label for="deptno">Número de Departamento:</label>
-    <select name="deptno" required>
+    <select name="deptno" required min="1">
         {% for department in data.departments %}
             <option value="{{ department.deptno }}" name="deptno">{{ department.deptno }} - {{ department.dname }} - {{ department.loc }}</option>
         {% endfor %}

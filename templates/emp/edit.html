@@ -20,17 +20,17 @@
         {% for i in data.employees %}
             <option value="{{ i.empno }}">{{ i.empno }} - {{ i.ename }}</option>
         {% endfor %}
-        <option value="0">NO TIENE</option>
+        <option value="0">~~~~~</option>
     </select>
 
     <label for="new_hiredate">Nueva Fecha de Contratación:</label>
     <input type="date" name="new_hiredate">
 
     <label for="new_sal">Nuevo Salario:</label>
-    <input type="number" name="new_sal">
+    <input type="number" name="new_sal" required min="1">
 
     <label for="new_comm">Nueva Comisión:</label>
-    <input type="number" name="new_comm">
+    <input type="number" name="new_comm" required min="0">
 
     <label for="new_deptno">Nuevo Número de Departamento:</label>
     <select name="new_deptno" required>

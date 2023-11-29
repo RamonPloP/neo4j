@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash
 from neo4j import GraphDatabase
 from neo4j.exceptions import ServiceUnavailable
 from datetime import datetime
@@ -10,6 +10,7 @@ password = "abcd1234"
 driver = GraphDatabase.driver(uri, auth=(user, password))
 
 app = Flask(__name__)
+app.secret_key = 'BDA'
 
 @app.route('/')
 def index():
@@ -53,6 +54,18 @@ def addEmp():
         sal = float(request.form.get('sal', 0.0))
         comm = float(request.form.get('comm', 0.0))
         deptno = int(request.form.get('deptno', -1))
+
+        with driver.session() as session:
+            result = session.run("MATCH (e:EMP {empno: $empno}) RETURN e", empno=empno)
+            existing_employee = result.single()
+
+            if existing_employee:
+                #El número de empleado ya está en uso
+                return redirect(url_for('addEmp'))
+
+        if mgr == empno:
+            #Un empleado no puede ser su propio gerente
+            return redirect(url_for('addEmp'))      
 
         with driver.session() as session:
             # Crear el nodo del nuevo empleado
@@ -108,7 +121,7 @@ def editEmp():
         "title": "Editar Emp",
         "departments": departments,
         "employees": employees
-    }
+    }   
 
     with driver.session() as session:
         result = session.run("MATCH (e:EMP) RETURN e.empno as empno, e.ename as ename, e.job as job, e.mgr as mgr, e.hiredate as hiredate, e.sal as sal, e.comm as comm, e.deptno as deptno")
@@ -125,6 +138,10 @@ def editEmp():
         new_sal = float(request.form.get('new_sal', 0.0))
         new_comm = float(request.form.get('new_comm', 0.0))
         new_deptno = int(request.form.get('new_deptno', -1))
+            
+        if new_mgr == empno_to_edit:
+            #Un empleado no puede ser su propio gerente
+            return redirect(url_for('editEmp'))      
 
         with driver.session() as session:
             # Eliminar la relación existente con el departamento anterior y el gerente anterior
