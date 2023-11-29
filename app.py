@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for
 from neo4j import GraphDatabase
 from neo4j.exceptions import ServiceUnavailable
 from datetime import datetime
